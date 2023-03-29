@@ -1,0 +1,11 @@
+<div class="w-full h-full overflow-y-scroll">
+    <div class="border-b border-b-slate-200 px-4">
+        <h1 class="text-center text-orange-500 font-semibold text-3xl py-2">Todo Today</h1>
+        <div class="rounded-full w-full h-2 mb-3 border bg-gray-200">
+            <div class="w-[50%] bg-green-500 h-full rounded-full"></div>
+        </div>
+    </div>
+    <% for (let i = 0; i < toDayTasks.length; i++ ) { const task = toDayTasks[i]; %>
+    <%- include("../partials/atodo", {task: task}) %>
+    <% } %>
+</div>

@@ -1,0 +1,105 @@
+<div class="h-screen w-screen grid grid-cols-12 grid-rows-6 gap-4 p-3">
+    <div class="lg:col-span-3 col-span-6 row-span-6 border rounded border-slate-300 shadow-md">
+        <%- include('comps/todo') %>
+    </div>
+    <div class="lg:col-span-9 col-span-6 row-span-1 border rounded border-slate-300 shadow-md">
+        <h1>CUSTOM LINKS</h1>
+    </div>
+    <div class="lg:col-span-3 col-span-6 row-span-5 border rounded border-slate-300 shadow-md">
+        <%- include('comps/todoToday') %>
+    </div>
+    <div class="lg:col-span-6 col-span-6 row-span-5 border rounded border-slate-300 shadow-md">
+        <%- include('comps/eisen') %>
+    </div>
+</div>
+<script>
+    const allTasks = $('[data-task-id]');
+    allTasks.on('mouseenter', function (e) {
+        const toUpdate = allTasks.filter(`[data-task-id=${e.target.getAttribute('data-task-id')}]`)
+        toUpdate.removeClass('bg-white');
+        toUpdate.addClass('bg-gray-200');
+    })
+    allTasks.on('mouseleave', function (e) {
+        const toUpdate = allTasks.filter(`[data-task-id=${e.target.getAttribute('data-task-id')}]`)
+        toUpdate.addClass('bg-white');
+        toUpdate.removeClass('bg-gray-200');
+    })
+    $('[id^="task-validate-"]').on('click', function (e) {
+        e.preventDefault();
+        validateTodo(e.target);
+    })
+    $('[id^="task-delete-"]').on('click', function (e) {
+        e.preventDefault();
+        deleteTodo(e.target);
+    })
+    console.log($('[data-task-id]'))
+</script>
+
+<script>
+    function validateTodo(target) {
+        const id = target.getAttribute('id').replace('task-validate-', '')
+        const toUpdate = $(`[data-task-id=${id}]`)
+        axios.post("/validateTodo", {
+            taskId: id
+        }).then((res) => {
+            window.location.reload();
+        }).catch((err) => {
+            if (err.response.status == 401) {
+                window.location.href = '/';
+            }
+            createNotification(err.response.statusText, err.response.data.message, true)
+        })
+    }
+    function deleteTodo(target) {
+        const id = target.getAttribute('id').replace('task-delete-', '')
+        const toDelete = $(`[data-task-id=${id}]`)
+        axios.post("/deleteTodo", {
+            taskId: id
+        }).then((res) => {
+            window.location.reload();
+        }).catch((err) => {
+            if (err.response.status == 401) {
+                window.location.href = '/';
+            }
+            createNotification(err.response.statusText, err.response.data.message, true)
+        })
+    }
+    function createTodo(taskName, submitGroup) {
+        submitGroup.classList.add("bg-green-400");
+        submitGroup.children[0].classList.add("text-green-800");
+        axios.post("/createTodo", {
+            taskName: taskName
+        }).then((res) => {
+            window.location.reload();
+        }).catch((err) => {
+            if (err.response.status == 401) {
+                window.location.href = '/';
+            }
+            createNotification(err.response.statusText, err.response.data.message, true)
+        }).finally(() => {
+            submitGroup.classList.remove("bg-green-400");
+            submitGroup.children[0].classList.remove("text-green-800");
+        })
+    }
+    function updateEisen(target, lastX, lastY) {
+        target.classList.add('bg-gray-200');
+        console.log('lol');
+        axios.post('/updateEisen', {
+            taskId: target.getAttribute('data-task-id'),
+            importance: target.getAttribute('data-importance'),
+            urgence: target.getAttribute('data-urgence')
+        }).then((res) => {
+            window.location.reload();
+        }).catch((err) => {
+            if (err.response.status == 401) {
+                window.location.href = '/';
+            } else {
+                target.style.left = lastX + 'px';
+                target.style.top = lastY + 'px';
+            }
+            createNotification(err.response.statusText, err.response.data.message, true)
+        }).finally(() => {
+            target.classList.remove('bg-gray-200');
+        })
+    }
+</script>

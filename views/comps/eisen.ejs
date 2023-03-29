@@ -1,0 +1,112 @@
+<div class="w-full h-full flex flex-col items-stretch">
+    <div class="border-b border-b-slate-200 px-4 shrink-0 w-full">
+        <h1 class="text-center text-blue-500 font-semibold text-3xl py-2">Eisenhower</h1>
+    </div>
+    <div class="grow p-4 relative">
+        <div id="eisenhower" class="w-full h-full grid grid-cols-2 grid-rows-2 gap-0.5 bg-gray-400">
+            <div class="bg-green-200"></div>
+            <div class="bg-blue-200"></div>
+            <div class="bg-yellow-200"></div>
+            <div class="bg-red-200"></div>
+        </div>
+        <div class="w-full h-full absolute top-0 left-0 p-4">
+            <div class="relative w-full h-full">
+                <% for (const task of tasks) { %>
+                <div data-importance="<%= task.importance %>" data-urgence="<%= task.urgence %>" data-task-id="<%= task.id %>" class="group draggable w-44 absolute p-2 border-2 border-gray-400 rounded-lg bg-white aria-checked:bg-green-200 cursor-grab"  aria-checked="<%= task.done %>">
+                    <h6 class="group-aria-checked:text-green-700 truncate pointer-events-none text-center"><%= task.name %></h6>
+                </div>
+                <% } %>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    const eisenhowerRect = $('#eisenhower')[0].getBoundingClientRect();
+    $('.draggable').each(function (i, e) {
+        const target = e;
+        const rect = e.getBoundingClientRect();
+        const importance = parseInt(target.getAttribute('data-importance'));
+        const urgence = parseInt(target.getAttribute('data-urgence'));
+        if (isNaN(importance) || isNaN(urgence)) {
+            return;
+        }
+        const sizeX = eisenhowerRect.right - eisenhowerRect.left;
+        const sizeY = eisenhowerRect.bottom - eisenhowerRect.top;
+
+        const deltaX = (sizeX - (((urgence * sizeX) / 100))) - (rect.width / 2);
+        const deltaY = (sizeY - (((importance * sizeY) / 100))) - (rect.height / 2);
+
+        target.style.left = (deltaX) + 'px';
+        target.style.top = (deltaY) + 'px';
+        const newRect = target.getBoundingClientRect();
+        if (newRect.left < eisenhowerRect.left) {
+            target.style.left = '0px';
+        }
+        if (newRect.top < eisenhowerRect.top) {
+            target.style.top = '0px';
+        }
+        if (newRect.right > eisenhowerRect.right) {
+            target.style.left = (sizeX - rect.width) + 'px';
+        }
+        if (newRect.bottom > eisenhowerRect.bottom) {
+            target.style.top = (sizeY - rect.height) + 'px';
+        }
+    })
+    $('.draggable').on('mousedown', function(e) {
+        e = e || window.event;
+        e.preventDefault();
+        let posXStart = e.clientX;
+        let posYStart = e.clientY;
+        const target = e.target;
+        target.classList.add('shadow-lg');
+        target.classList.add('z-10');
+
+        const lastX = target.offsetLeft;
+        const lastY = target.offsetTop;
+        
+        document.onmousemove = function (e) {
+            e = e || window.event;
+            e.preventDefault();
+
+            const borne = (n, min, max) => n = Math.max(Math.min(min, n), max);
+
+            const deltaX = posXStart - e.clientX;
+            const deltaY = posYStart - e.clientY;
+            const lockX = target.offsetLeft;
+            const lockY = target.offsetTop;
+
+            target.style.left = (target.offsetLeft - deltaX) + 'px';
+            target.style.top = (target.offsetTop - deltaY) + 'px';
+            posXStart = e.clientX;
+            posYStart = e.clientY;
+
+            const targetRect = target.getBoundingClientRect();
+            if (targetRect.left < eisenhowerRect.left || targetRect.right > eisenhowerRect.right) {
+                target.style.left = lockX + 'px';
+            }
+            if (targetRect.top < eisenhowerRect.top || targetRect.bottom > eisenhowerRect.bottom) {
+                target.style.top = lockY + 'px';
+            }
+
+        }
+        document.onmouseup = function (e) {
+            e = e || window.event;
+            e.preventDefault();
+            document.onmouseup = null;
+            document.onmousemove = null;
+            target.classList.remove('z-10');
+            target.classList.remove('shadow-lg');
+            
+            const rect = target.getBoundingClientRect();
+            const sizeX = eisenhowerRect.width;
+            const sizeY = eisenhowerRect.height;
+
+            const urgence = 100 - Math.round((parseInt(target.offsetLeft + (rect.width / 2)) * 100) / sizeX)
+            const importance = 100 - Math.round((parseInt(target.offsetTop + (rect.height / 2)) * 100) / sizeY);
+
+            target.setAttribute('data-importance', importance);
+            target.setAttribute('data-urgence', urgence);
+            updateEisen(target, lastX, lastY)
+        }
+    })
+</script>

@@ -1,0 +1,18 @@
+<div class="group border-b border-b-slate-200 py-2 aria-checked:bg-green-200 transition-all" data-task-id="<%= task.id %>" aria-checked="<%= task.done %>">
+    <div class="flex h-11 w-full pointer-events-none">
+        <div class="h-full aspect-square p-2 shrink-0 pointer-events-auto">
+            <input id="task-validate-<%= task.id %>" type="checkbox" class="h-full appearance-none w-full block rounded-full border border-slate-800 checked:bg-green-500 checked:border-green-700" <%= task.done ? "checked" : '' %> autocomplete='off'></input>
+        </div>
+        <div class="grow self-center">
+            <div class="w-full">
+                <h1 class="group-aria-checked:text-green-700 text-xl truncate"><%= task.name %></h1>
+                <h1 class="group-aria-checked:text-green-700 text-sm">Deadline</h1>
+            </div>
+        </div>
+        <div class="self-center h-full aspect-square p-1">
+            <div id="task-delete-<%= task.id %>" class="h-full w-full flex rounded-md hover:cursor-pointer hover:bg-gray-200 active:bg-gray-300 pointer-events-auto">
+                <span class="text-slate-400 self-center mx-auto select-none pointer-events-none">X</span>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,21 @@
+<div class="w-full h-full overflow-y-scroll">
+    <h1 class="text-center text-violet-800 font-semibold text-3xl border-b border-b-slate-200 py-2 pb-3 mb-4">Todo List</h1>
+    <form id="addTodo" class="flex h-12 mb-4 px-3">
+        <input type="text" class="h-full grow  border-b border-b-gray-200 bg-transparent px-2 shadow mr-2" placeholder="New task..." name="new-task-name">
+        <div class="self-center h-full aspect-square p-0.5">
+            <div id="submitGroup" class="group flex h-full rounded-md bg-green-200 hover:bg-green-300 active:bg-green-400">
+                <input type="submit" class="self-center mx-auto text-2xl text-green-600 select-none group-hover:text-green-700 group-active:text-green-800" value="+">
+            </div>
+        </div>
+    </form>
+    <% for (const task of tasks) { %>
+    <%- include("../partials/atodo", {task: task}) %>
+    <% } %>
+</div>
+<script>
+    $('#addTodo').on('submit', function(e) {
+        e.preventDefault();
+        const submitGroup = $('#submitGroup')[0];
+        createTodo($('[name=new-task-name]').val(), submitGroup);
+    })
+</script>

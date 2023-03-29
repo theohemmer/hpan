@@ -1,0 +1,78 @@
+<div class="flex h-screen">
+    <div class="self-center container mx-auto rounded border-2 shadow-xl bg-white max-w-xs sm:max-w-lg lg:max-w-3xl">
+        <div class="text-center border-b-2 py-4 mb-5">
+            <h1 class="text-3xl font-semibold">Pannel Login</h1>
+        </div>
+        <div class="mx-12">
+            <form id="test">
+                <div class="mb-4">
+                    <input name="username" class="border rounded border-slate-300 w-full py-2 pl-1.5 block hover:border-slate-400" placeholder="Username" type="text" autocomplete="off"/>
+                    <div class="hidden text-red-600 my-0.5" id="error">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true" class="w-5 h-5 text-sm inline align-bottom">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"></path>
+                        </svg>
+                        <span class="inline text-sm">This field cannot be empty</span>  
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <input name="password" class="border rounded border-slate-300 w-full py-2 pl-1.5 block hover:border-slate-400" placeholder="Password" type="password"/>
+                    <div class="hidden text-red-600 my-0.5" id="error">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true" class="w-5 h-5 text-sm inline align-bottom">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"></path>
+                        </svg>
+                        <span class="inline text-sm">This field cannot be empty</span>  
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <input name="submit" class="block border rounded w-2/3 mx-auto py-1 bg-violet-100 hover:bg-violet-200 text-violet-600 active:bg-violet-300" type="submit" value="Submit">
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<script>
+    function validate(el) {
+        if (el.value.length == 0) {
+            el.classList.add('border-red-400');
+            el.parentElement.children[1].classList.remove('hidden');
+            return null;
+        } else {
+            el.classList.remove('border-red-400');
+            el.parentElement.children[1].classList.add('hidden');
+            return el.value;
+        }
+    }
+    function validateForm() {
+        return {
+            username: validate($('input[name="username"]')[0]),
+            password: validate($('input[name="password"]')[0])
+        }
+    }
+    $('#test').on('submit', (e) => {
+        e.preventDefault();
+        $('input[type="submit"]').addClass("bg-violet-300");
+        const {username, password} = validateForm();
+        if (!username || !password) {
+            return;
+        }
+        axios.post('/login', {
+            username: username,
+            password: password
+        }).then((test) => {
+            window.location.href = '/dashboard'
+        }).catch((err) => {
+            console.log(err);
+            createNotification(err.response.statusText, err.response.data.message, true)
+        }).finally(() => {
+            $('input[type="submit"]').removeClass("bg-violet-300");
+        })
+    })
+    $('input[type!="submit"]').on('focusout', e => validate(e.target))
+    $('input[type!="submit"]').on('keyup', e => validate(e.target))
+    $(function () {
+        axios.post("/checkLog", {})
+        .then((res) => {
+            window.location.href = '/dashboard'
+        }).catch((err) => {})
+    })
+</script>

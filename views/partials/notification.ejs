@@ -1,0 +1,120 @@
+<script>
+    const activeNotifications = [];
+    const isMobile = window.screen.width <= 640;
+    function moveNotifications(removedElement) {
+        const list = document.getElementById('notifications');
+        let nodes = list.childNodes;
+        let last = list.lastChild;
+        let totalHeight = 0;
+        nodes = [].filter.call(nodes, el => !el.getAttribute('closing'));
+        last = nodes[nodes.length - 1];
+        nodes.forEach(e => totalHeight += e.offsetHeight);
+        for (let i = 0; i < nodes.length; i++) {
+            const el = nodes[i];
+            if (el == last) {
+                if (isMobile) {
+                    el.style.top = "0px";
+                } else {
+                    el.style.bottom = "0px";
+                }
+                el.style.left = "0px";
+                continue;
+            }
+            const distStr = (isMobile ? el.style.top : el.style.bottom).split('px')[0];
+            const dist = parseInt(distStr);
+            totalHeight -= el.offsetHeight;
+            if (isMobile) {
+                el.style.top = `${totalHeight}px`;
+            } else {
+                el.style.bottom = `${totalHeight}px`;
+            }
+        }
+    }
+    function letOnScreen(el) {
+        const closing = parseInt(el.getAttribute('closeId'));
+        if (isNaN(closing)) {
+            return;
+        }
+        clearTimeout(closing);
+    }
+    function letDisapear(el) {
+        const closing = setTimeout(() => { closeNotification(el)}, 5000);
+        el.setAttribute('closeId', closing)
+    }
+    function closeNotification(el) {
+        if (el.tagName == 'SPAN') {
+            el = el.parentElement.parentElement.parentElement;
+        }
+        const list = document.getElementById('notifications');
+        list.childNodes.forEach(e => {
+            // add closing tag instead for filter on move notification because
+            // when multiple closing at the same time, the closing elements slide down
+            if (e == el) {
+                e.style.opacity = "0";
+                e.style.left = "-500px";
+                e.style.zIndex = "-1";
+                e.setAttribute('closing', 'true');
+                moveNotifications(e);
+                setTimeout(() => {
+                    list.removeChild(e);
+                }, 500);
+            }
+        });
+    }
+    function expand(el) {
+        el.setAttribute('aria-expanded', 'true');
+        el.children[0].className = "";
+        moveNotifications();
+    }
+    function createNotification(title, message, isError) {
+        const iconColor = isError ? "text-red-500" : "text-green-500"
+        const tooLong = message.length > 40;
+        let messageOne, messageDeux = "";
+        if (tooLong) {
+            messageOne = message.slice(0, 40);
+            messageDeux = message.slice(40);
+        }
+        const template = 
+        `<div class="pointer-events-auto absolute w-full transition-all duration-300" onmouseenter="letOnScreen(this)" onmouseleave="letDisapear(this)">
+            <div class="rounded-md border-2 shadow-md mt-3 p-3 relative bg-white">
+                <div class="flex relative">
+                    <div class="h-9 w-9 shrink-0 self-center mr-2 ${iconColor}">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true" class="w-full h-full">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"></path>
+                        </svg>
+                    </div>
+                    <div class="self-center grow text leading-none">
+                        <h1 class="text-lg font-semibold m-0">${title}</h1>
+                        ${tooLong ?
+                            `<span class="text text-slate-700 m-0 aria-[expanded=false]:after:content-['...']" aria-expanded="false" onclick="expand(this)">${messageOne}<span class="hidden">${messageDeux}</span></span>`
+                        :   `<span class="text text-slate-700 m-0">${message}</span>`
+                        }
+                        
+                    </div>
+                </div>
+                <div class="absolute top-0 right-0 mr-2">
+                    <span class="font-bold hover:cursor-pointer" onclick="closeNotification(this)">X</span>
+                </div>
+            </div>
+        </div>`;
+        const newDiv = document.createElement('div');
+        newDiv.innerHTML = template;
+        let el = new DOMParser().parseFromString(template, 'text/html');
+        const list = document.getElementById('notifications');
+        list.appendChild(newDiv.firstChild);
+        const last = list.lastChild
+        if (isMobile) {
+            last.style.top = "-300px";
+        } else {
+            last.style.bottom = "-300px";
+        }
+        last.style.left = "-300px";
+        setTimeout(moveNotifications, 50);
+        const closing = setTimeout(() => { closeNotification(last) }, 5000);
+        last.setAttribute('closeId', closing);
+        activeNotifications.push(last)
+        if (isMobile && activeNotifications.length > 3) {
+            closeNotification(activeNotifications.shift());
+        }
+    }
+</script>
