@@ -51,13 +51,13 @@ const checkAuth = (req: Request, res: Response, next: NextFunction) => {
 const checkAuthRedirect = (req: Request, res: Response, next: NextFunction) => {
     const { token } = req.session as any;
     if (!token) {
-        res.render('partials/page', {
+        return res.render('partials/page', {
             title: "Login",
             view: '../login',
         });
     }
     if (token != "allowed") {
-        res.render('partials/page', {
+        return res.render('partials/page', {
             title: "Login",
             view: '../login',
         });
