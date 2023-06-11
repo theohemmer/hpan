@@ -5,7 +5,7 @@ module.exports = {
         await queryInterface.addColumn('Todos', 'userId', {
             type: DataTypes.UUID,
             references: {
-                model: 'ClientUsers',
+                model: 'Users',
                 key: 'id'
             },
             onUpdate: 'CASCADE',
