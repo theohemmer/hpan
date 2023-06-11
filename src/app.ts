@@ -32,7 +32,7 @@ async function checkDatabaseConnection() {
 }
 
 const checkAuth = (req: Request, res: Response, next: NextFunction) => {
-    const { token } = req.signedCookies as any;
+    const { token } = req.cookies as any;
     if (!token) {
         return res.status(401).send({
             message: "Not logged in."
@@ -47,7 +47,7 @@ const checkAuth = (req: Request, res: Response, next: NextFunction) => {
 }
 
 const checkAuthRedirect = (req: Request, res: Response, next: NextFunction) => {
-    const { token } = req.signedCookies as any;
+    const { token } = req.cookies as any;
     if (!token) {
         return res.render('partials/page', {
             title: "Login",
