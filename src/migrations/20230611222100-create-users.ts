@@ -8,6 +8,7 @@ module.exports = {
                 autoIncrement: true,
                 primaryKey: true,
                 type: DataTypes.UUID,
+                defaultValue: DataTypes.UUIDV4
             },
             createdAt: {
                 type: DataTypes.DATE,
