@@ -1,5 +1,5 @@
 import express, {Request, Response, NextFunction} from "express";
-import session from "express-session";
+import cookieParser from "cookie-parser";
 import path from 'path';
 import db from "./models";
 import Todo from "./models/todo";
@@ -9,9 +9,7 @@ app.set('view engine', 'ejs');
 app.use(express.urlencoded({ extended: true }))
 app.use(express.json());
 app.use("/assets", express.static(path.join(__dirname, "..", "public")));
-app.use(session({
-    secret: 'A really random secret',
-}))
+app.use(cookieParser("ThisIReallySecret!!"))
 
 let tasdks: {
     id: number,
@@ -34,7 +32,7 @@ async function checkDatabaseConnection() {
 }
 
 const checkAuth = (req: Request, res: Response, next: NextFunction) => {
-    const { token } = req.session as any;
+    const { token } = req.signedCookies as any;
     if (!token) {
         return res.status(401).send({
             message: "Not logged in."
@@ -49,7 +47,7 @@ const checkAuth = (req: Request, res: Response, next: NextFunction) => {
 }
 
 const checkAuthRedirect = (req: Request, res: Response, next: NextFunction) => {
-    const { token } = req.session as any;
+    const { token } = req.signedCookies as any;
     if (!token) {
         return res.render('partials/page', {
             title: "Login",
@@ -73,8 +71,14 @@ app.get('/', (req, res) => {
 })
 
 app.get('/dashboard', checkAuthRedirect, async (req, res) => {
+    const todayDate = new Date();
+    const tomorowDate = new Date();
+    todayDate.setHours(0, 0, 0, 0);
+    tomorowDate.setHours(0, 0, 0, 0);
+    tomorowDate.setDate(tomorowDate.getDate() + 1);
     const tasks = await Todo.findAll();
-    const toDayTasks = tasks.sort((a, b) => (b.urgence * ((b.importance / 100) + 1)) - (a.urgence * ((a.importance / 100) + 1))).slice(0, 5)
+    const tasksNotDones = tasks.filter(x => x.doneAt == null || (x.doneAt > todayDate && x.doneAt < tomorowDate));
+    const toDayTasks = tasksNotDones.sort((a, b) => (b.urgence * ((b.importance / 100) + 1)) - (a.urgence * ((a.importance / 100) + 1))).slice(0, 5);
     res.render('partials/page', {
         title: "Dashboard",
         view: '../dashboard',
@@ -91,7 +95,7 @@ app.post('/login', (req, res) => {
         });
     }
     if (username == "theo" && password == "password") {
-        (req.session as any).token = "allowed";
+        res.cookie("token", "allowed", { maxAge: 900000, httpOnly: true, secure: true });
         return res.status(200).send({
             message: "Success."
         });
@@ -122,6 +126,7 @@ app.post("/validateTodo", checkAuth, async (req, res) => {
         })
     }
     task.done = !task.done;
+    task.doneAt = new Date();
     await task.save();
     return res.status(200).send({
         message: "Success."

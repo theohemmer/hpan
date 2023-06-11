@@ -2,7 +2,7 @@ import { DataTypes, QueryInterface, Sequelize } from "sequelize";
 
 module.exports = {
     async up(queryInterface) {
-        queryInterface.createTable('ProUsers', {
+        queryInterface.createTable('Todos', {
             id: {
                 allowNull: false,
                 autoIncrement: true,
@@ -29,13 +29,12 @@ module.exports = {
             done: {
                 type: DataTypes.BOOLEAN,
             },
-            isConfirmed: {
-                type: DataTypes.BOOLEAN,
-                defaultValue: false
+            doneAt: {
+                type: DataTypes.DATE
             },
         });
     },
     async down(queryInterface) {
-        await queryInterface.dropTable('ProUsers');
+        await queryInterface.dropTable('Todos');
     }
 }

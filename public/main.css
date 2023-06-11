@@ -591,6 +591,10 @@ video {
   grid-column: span 6 / span 6;
 }
 
+.col-span-12 {
+  grid-column: span 12 / span 12;
+}
+
 .row-span-1 {
   grid-row: span 1 / span 1;
 }
@@ -1226,6 +1230,10 @@ video {
 }
 
 @media (min-width: 640px) {
+  .sm\:col-span-12 {
+    grid-column: span 12 / span 12;
+  }
+
   .sm\:max-w-lg {
     max-width: 32rem;
   }
@@ -1242,6 +1250,10 @@ video {
 
   .lg\:col-span-9 {
     grid-column: span 9 / span 9;
+  }
+
+  .lg\:col-span-12 {
+    grid-column: span 12 / span 12;
   }
 
   .lg\:max-w-3xl {

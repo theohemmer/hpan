@@ -24,6 +24,9 @@ class Todo extends Model<Todo> {
     
     @Column(DataType.BOOLEAN)
     done: boolean
+
+    @Column(DataType.DATE)
+    doneAt: Date;
 }
 
 export default Todo
