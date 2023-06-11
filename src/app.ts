@@ -121,7 +121,7 @@ app.post('/login', async (req, res) => {
             message: "Bad credentials."
         });
     }
-    if (!(await bcrypt.compare(user.password, password))) {
+    if (!(await bcrypt.compare(password, user.password))) {
         return res.status(401).send({
             message: "Bad credentials."
         })
