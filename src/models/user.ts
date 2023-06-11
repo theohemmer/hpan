@@ -8,7 +8,7 @@ import Todo from './todo';
 class User extends Model<User> {
     @Column({
         type: DataType.UUID,
-        autoIncrement: true,
+        defaultValue: DataType.UUIDV4,
         primaryKey: true,
         allowNull: false,
     })
