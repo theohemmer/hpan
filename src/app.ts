@@ -82,7 +82,7 @@ app.get('/dashboard', checkAuthRedirect, async (req, res) => {
     res.render('partials/page', {
         title: "Dashboard",
         view: '../dashboard',
-        tasks: tasks,
+        tasks: tasksNotDones,
         toDayTasks: toDayTasks
     })
 })
