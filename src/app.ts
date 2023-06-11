@@ -63,15 +63,19 @@ const checkAuth = async (req: Request, res: Response, next: NextFunction) => {
     return next();
 }
 
-const checkAuthRedirect = (req: Request, res: Response, next: NextFunction) => {
+const checkAuthRedirect = async (req: Request, res: Response, next: NextFunction) => {
     const { token } = req.cookies as any;
     if (!token) {
-        return res.render('partials/page', {
-            title: "Login",
-            view: '../login',
+        return res.status(401).send({
+            message: "Not logged in."
         });
     }
-    if (token != "allowed") {
+    const user = await User.findOne({
+        where: {
+            lastAuthToken: token
+        }
+    });
+    if (!user) {
         return res.render('partials/page', {
             title: "Login",
             view: '../login',
