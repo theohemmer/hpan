@@ -11,13 +11,6 @@ module.exports = {
             onUpdate: 'CASCADE',
             onDelete: 'CASCADE',
             
-        }).then(async () => {
-            await queryInterface.addConstraint('Todos', {
-                type: 'FOREIGN KEY',
-                fields: [
-                    'userId'
-                ]
-            })
         })
     },
     async down(queryInterface) {
