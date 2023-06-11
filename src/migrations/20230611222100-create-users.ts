@@ -2,12 +2,12 @@ import { DataTypes, QueryInterface, Sequelize } from "sequelize";
 
 module.exports = {
     async up(queryInterface) {
-        await queryInterface.createTable('Todos', {
+        await queryInterface.createTable('Users', {
             id: {
                 allowNull: false,
                 autoIncrement: true,
                 primaryKey: true,
-                type: DataTypes.INTEGER,
+                type: DataTypes.UUID,
             },
             createdAt: {
                 type: DataTypes.DATE,
@@ -17,24 +17,18 @@ module.exports = {
                 type: DataTypes.DATE,
                 defaultValue: Sequelize.fn('NOW'),
             },
-            name: {
+            username: {
                 type: DataTypes.STRING
             },
-            importance: {
-                type: DataTypes.INTEGER,
+            password: {
+                type: DataTypes.STRING,
             },
-            urgence: {
-                type: DataTypes.INTEGER,
-            },
-            done: {
-                type: DataTypes.BOOLEAN,
-            },
-            doneAt: {
-                type: DataTypes.TIME
-            },
+            lastAuthToken: {
+                type: DataTypes.STRING
+            }
         });
     },
     async down(queryInterface) {
-        await queryInterface.dropTable('Todos');
+        await queryInterface.dropTable('Users');
     }
 }

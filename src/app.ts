@@ -1,8 +1,10 @@
 import express, {Request, Response, NextFunction} from "express";
 import cookieParser from "cookie-parser";
 import path from 'path';
+import bcrypt from "bcrypt";
 import db from "./models";
 import Todo from "./models/todo";
+import User from "./models/user";
 
 const app = express();
 app.set('view engine', 'ejs');
@@ -19,6 +21,15 @@ let tasdks: {
     done: boolean
 }[] = [];
 
+export default function generateRandomString(len: number) :string {
+    const characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_-.!^';
+    let token = '';
+    for (let i = 0; i < len; i++) {
+        token += characters[Math.floor(Math.random() * characters.length)];
+    }
+    return token;
+}
+
 async function checkDatabaseConnection() {
     try {
         await db.authenticate();
@@ -31,18 +42,24 @@ async function checkDatabaseConnection() {
     }
 }
 
-const checkAuth = (req: Request, res: Response, next: NextFunction) => {
+const checkAuth = async (req: Request, res: Response, next: NextFunction) => {
     const { token } = req.cookies as any;
     if (!token) {
         return res.status(401).send({
             message: "Not logged in."
         });
     }
-    if (token != "allowed") {
+    const user = await User.findOne({
+        where: {
+            lastAuthToken: token
+        }
+    });
+    if (!user) {
         return res.status(401).send({
             message: "Bad token."
         })
     }
+    (req as any).user = user;
     return next();
 }
 
@@ -87,22 +104,36 @@ app.get('/dashboard', checkAuthRedirect, async (req, res) => {
     })
 })
 
-app.post('/login', (req, res) => {
+app.post('/login', async (req, res) => {
     const {username, password} = req.body;
     if (!username || !password) {
         return res.status(400).send({
             message: "Invalid body."
         });
     }
-    if (username == "theo" && password == "password") {
-        res.cookie("token", "allowed", { maxAge: 900000, httpOnly: true, secure: true });
-        return res.status(200).send({
-            message: "Success."
+    const user = await User.findOne({
+        where: {
+            username: username
+        }
+    });
+    if (!user) {
+        return res.status(401).send({
+            message: "Bad credentials."
         });
     }
-    return res.status(401).send({
-        message: "Bad credentials."
-    })
+    if (!(await bcrypt.compare(user.password, password))) {
+        return res.status(401).send({
+            message: "Bad credentials."
+        })
+    }
+    const token = generateRandomString(48);
+    await user.update({
+        lastAuthToken: token
+    });
+    res.cookie("token", token);
+    return res.status(200).send({
+        message: "Success."
+    });
 })
 
 app.post("/checkLog", checkAuth, (req, res) => {
@@ -112,14 +143,18 @@ app.post("/checkLog", checkAuth, (req, res) => {
 })
 
 app.post("/validateTodo", checkAuth, async (req, res) => {
-    const tasks = await Todo.findAll();
     const {taskId} = req.body;
+    const task = await Todo.findOne({
+        where: {
+            id: taskId,
+            userId: (req as any).user.id
+        }
+    });
     if (!taskId) {
         return res.status(400).send({
             message: "Invalid body."
         })
     }
-    const task = tasks.find(x => x.id == taskId);
     if (!task) {
         return res.status(400).send({
             message: "Invalid task id."
@@ -134,14 +169,18 @@ app.post("/validateTodo", checkAuth, async (req, res) => {
 })
 
 app.post("/deleteTodo", checkAuth, async (req, res) => {
-    const tasks = await Todo.findAll();
     const {taskId} = req.body;
+    const task = await Todo.findOne({
+        where: {
+            id: taskId,
+            userId: (req as any).user.id
+        }
+    });
     if (!taskId) {
         return res.status(400).send({
             message: "Invalid body."
         })
     }
-    const task = tasks.find(x => x.id == taskId);
     if (!task) {
         return res.status(400).send({
             message: "Invalid task id."
@@ -160,20 +199,52 @@ app.post("/createTodo", checkAuth, async (req, res) => {
             message: "Invalid body."
         })
     }
-    await Todo.create({
+    const todo = await Todo.create({
         name: taskName,
         importance: 50,
         urgence: 50,
         done: false
     })
+    await todo.$set('userId', (req as any).user.id);
     return res.status(200).send({
         message: "Success."
     })
 })
 
+app.post("/createUser", async (req, res) => {
+    const { username, password, apiKey } = req.body;
+    if (!username || !password || apiKey != process.env.API_KEY || !apiKey) {
+        return res.status(400).send({
+            message: "Malformed."
+        })
+    }
+    let user = await User.findOne({
+        where: {
+            username: username
+        }
+    });
+    if (user) {
+        return res.status(400).send({
+            message: "Already exists."
+        });
+    }
+    user = await User.create({
+        username: username,
+        password: await bcrypt.hash(password, 10)
+    });
+    return res.status(200).send({
+        message: "Ok"
+    });
+})
+
 app.post("/updateEisen", checkAuth, async (req, res) => {
-    const tasks = await Todo.findAll();
     const {taskId, importance, urgence} = req.body;
+    const task = await Todo.findOne({
+        where: {
+            id: taskId,
+            userId: (req as any).user.id
+        }
+    });
     if (!taskId || !importance || !urgence) {
         return res.status(400).send({
             message: "Invalid body."
@@ -181,7 +252,6 @@ app.post("/updateEisen", checkAuth, async (req, res) => {
     }
     const importanceInt = parseInt(importance);
     const urgenceInt = parseInt(urgence);
-    const task = tasks.find(x => x.id == taskId);
     if (!task) {
         return res.status(400).send({
             message: "Invalid task id."
