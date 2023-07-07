@@ -207,9 +207,9 @@ app.post("/createTodo", checkAuth, async (req, res) => {
         name: taskName,
         importance: 50,
         urgence: 50,
-        done: false
+        done: false,
+        userId: (req as any).user.id
     })
-    await todo.$set('userId', (req as any).user.id);
     return res.status(200).send({
         message: "Success."
     })
